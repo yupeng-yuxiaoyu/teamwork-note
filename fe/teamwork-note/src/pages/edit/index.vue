@@ -12,61 +12,83 @@
 </template>
 
 <script>
-import io from "socket.io-client";
-export default {
-  socket: null,
-  data() {
-    return {
-      value: "",
-      updateFlag: false,
-      textarea: null,
-      airticalTitle: "",
-      showGetTitle: false
-    };
-  },
-  mounted() {
-    this.socket = io("http://localhost:3000");
-    this.socket.on("connect", () => {});
-    this.socket.on("changeMessage", res => {
-      const start = this.textarea.selectionStart;
-      const end = this.textarea.selectionEnd;
-      this.updateFlag = false;
-      this.value = res;
-      this.$nextTick(() => {
-        this.textarea.selectionStart = start;
-        this.textarea.selectionEnd = end;
-      });
-    });
-    this.textarea = document.getElementsByTagName("textarea")[0];
-  },
-  methods: {
-    changeValue(val) {
-      if (!this.updateFlag) {
-        this.updateFlag = true;
-        return;
+  import io from "socket.io-client";
+  export default {
+    socket: null,
+    data() {
+      return {
+        value: "",
+        updateFlag: false,
+        textarea: null,
+        airticalTitle: "",
+        showGetTitle: false,
+        id: null,
+      };
+    },
+    mounted() {
+      if (!this.$route.query.create) {
+        this.id = this.$route.query.id;
+        console.log('this.$route.query :', this.$route.query);
+        this.$axios.get('http://localhost:3000/api/airticle', {
+          params: {
+            id: this.$route.query.id
+          }
+        }).then(res => {
+          console.log('res :', res);
+          this.airticalTitle = res.data.data.title;
+          this.value = res.data.data.content;
+        });
+      } else {
+        this.$axios.post('http://localhost:3000/api/create_airticle').then(res => {
+          this.id = res.data.data.id;
+        })
       }
-      this.socket.emit("changeMessage", val);
-    },
-    save() {
-      this.showGetTitle = true;
-    },
-    ok() {
-      this.showGetTitle = false;
-      this.$axios.post("http://localhost:3000/api/airticle", {
-        title: this.airticalTitle,
-        content: this.value,
+
+      this.socket = io("http://localhost:3000");
+      this.socket.on("connect", () => {});
+      this.socket.on("changeMessage", res => {
+        const start = this.textarea.selectionStart;
+        const end = this.textarea.selectionEnd;
+        this.updateFlag = false;
+        this.value = res;
+        this.$nextTick(() => {
+          this.textarea.selectionStart = start;
+          this.textarea.selectionEnd = end;
+        });
       });
+      this.textarea = document.getElementsByTagName("textarea")[0];
+    },
+    methods: {
+      changeValue(val) {
+        if (!this.updateFlag) {
+          this.updateFlag = true;
+          return;
+        }
+        this.socket.emit("changeMessage", val);
+      },
+      save() {
+        this.showGetTitle = true;
+      },
+      ok() {
+        this.showGetTitle = false;
+        this.$axios.post("http://localhost:3000/api/airticle", {
+          title: this.airticalTitle,
+          content: this.value,
+          id: this.id,
+        }).then(res => {
+          this.$router.push('/list')
+        });
+      }
     }
-  }
-};
+  };
 </script>
 
 <style lang="less">
-html,
-body,
-#app,
-#app > div,
-.v-note-wrapper {
-  height: 100%;
-}
+  html,
+  body,
+  #app,
+  #app>div,
+  .v-note-wrapper {
+    height: 100%;
+  }
 </style>

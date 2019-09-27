@@ -11,7 +11,7 @@ export default new VueRouter({
   mode: 'history',
   routes: [{
       path: '/',
-      redirect: '/edit'
+      redirect: '/list'
     },
     {
       path: '/list',

@@ -23,9 +23,20 @@ router.get('/', (ctx, next) => {
 })
 
 router.post('/api/airticle', (ctx, next) => {
-  const obj = Object.assign({}, ctx.request.body, {
-    id: airticleList.length + 1,
-  })
+  const obj = ctx.request.body;
+
+  airticleList.splice(ctx.request.body.id, 1, obj);
+  ctx.body = {
+    code: 1,
+    data: {
+      id: obj.id,
+    }
+  }
+})
+router.post('/api/create_airticle', (ctx, next) => {
+  const obj = {
+    id: airticleList.length,
+  }
   airticleList.push(obj);
   ctx.body = {
     code: 1,
@@ -34,11 +45,27 @@ router.post('/api/airticle', (ctx, next) => {
     }
   }
 })
+router.get('/api/airticle', (ctx, next) => {
+  console.log('ctx.query.id :', ctx.query.id);
+  ctx.body = {
+    code: 1,
+    data: airticleList[ctx.query.id],
+  }
+})
 router.get('/api/airticleList', (ctx, next) => {
   ctx.body = {
     code: 1,
     data: {
       airticle_list: airticleList,
+    }
+  }
+})
+router.post('/api/delete_airticle', (ctx, next) => {
+  const deleteItem = airticleList.splice(ctx.request.body.id, 1);
+  ctx.body = {
+    code: 1,
+    data: {
+      delete_list: deleteItem,
     }
   }
 })
