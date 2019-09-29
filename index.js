@@ -9,6 +9,7 @@ const io = require('socket.io')(server)
 const history = require('koa2-history-api-fallback')
 const cors = require('koa2-cors');
 const bodyParser = require('koa-bodyparser')
+const db = require('./db/index')
 
 const router = new Router()
 
@@ -22,37 +23,40 @@ router.get('/', (ctx, next) => {
   ctx.body = fs.createReadStream('./fe/teamwork-note/dist/index.html')
 })
 
-router.post('/api/airticle', (ctx, next) => {
+router.post('/api/airticle', async (ctx, next) => {
   const obj = ctx.request.body;
-
-  airticleList.splice(ctx.request.body.id, 1, obj);
+  await db.updateAirticle(ctx.request.body.id, {
+    title: ctx.request.body.title,
+    content: ctx.request.body.content
+  })
   ctx.body = {
     code: 1,
     data: {
-      id: obj.id,
+      message: '更新成功',
     }
   }
 })
-router.post('/api/create_airticle', (ctx, next) => {
-  const obj = {
-    id: airticleList.length,
-  }
-  airticleList.push(obj);
+router.post('/api/create_airticle', async (ctx, next) => {
+  await db.createAirticle({
+    title: ctx.request.body.title,
+    content: ctx.request.body.content
+  })
   ctx.body = {
     code: 1,
     data: {
-      id: obj.id,
+      message: '创建成功',
     }
   }
 })
-router.get('/api/airticle', (ctx, next) => {
-  console.log('ctx.query.id :', ctx.query.id);
+router.get('/api/airticle', async (ctx, next) => {
+  const airticle = await db.getOneAirticleById(ctx.request.query.id)
   ctx.body = {
     code: 1,
-    data: airticleList[ctx.query.id],
+    data: airticle[0],
   }
 })
-router.get('/api/airticleList', (ctx, next) => {
+router.get('/api/airticleList', async (ctx, next) => {
+  const airticleList = await db.getAllAirticle()
   ctx.body = {
     code: 1,
     data: {
@@ -60,14 +64,25 @@ router.get('/api/airticleList', (ctx, next) => {
     }
   }
 })
-router.post('/api/delete_airticle', (ctx, next) => {
-  const deleteItem = airticleList.splice(ctx.request.body.id, 1);
-  ctx.body = {
-    code: 1,
-    data: {
-      delete_list: deleteItem,
+router.post('/api/delete_airticle', async (ctx, next) => {
+  try {
+    await db.deleteAirticle(ctx.request.body.id)
+    ctx.body = {
+      code: 1,
+      data: {
+        message: '删除成功',
+      }
+    }
+  } catch (error) {
+    console.log('error :', error);
+    ctx.body = {
+      code: 1,
+      data: {
+        message: '删除失败',
+      }
     }
   }
+
 })
 app.use(staticFiles(path.resolve(__dirname, './static')))
 app.use(router.routes())

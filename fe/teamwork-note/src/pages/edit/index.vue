@@ -1,6 +1,6 @@
 <template>
   <div>
-    <mavon-editor :value="value" @change="changeValue" @save="save" />
+    <mavon-editor v-model="value" @change="changeValue" @save="save" />
     <el-dialog :visible.sync="showGetTitle" title="输入一个文章的标题吧">
       <el-input v-model="airticalTitle" placeholder="请输入内容"></el-input>
       <div slot="footer" class="dialog-footer">
@@ -28,20 +28,14 @@
     mounted() {
       if (!this.$route.query.create) {
         this.id = this.$route.query.id;
-        console.log('this.$route.query :', this.$route.query);
         this.$axios.get('http://localhost:3000/api/airticle', {
           params: {
             id: this.$route.query.id
           }
         }).then(res => {
-          console.log('res :', res);
           this.airticalTitle = res.data.data.title;
           this.value = res.data.data.content;
         });
-      } else {
-        this.$axios.post('http://localhost:3000/api/create_airticle').then(res => {
-          this.id = res.data.data.id;
-        })
       }
 
       this.socket = io("http://localhost:3000");
@@ -71,13 +65,34 @@
       },
       ok() {
         this.showGetTitle = false;
-        this.$axios.post("http://localhost:3000/api/airticle", {
-          title: this.airticalTitle,
-          content: this.value,
-          id: this.id,
-        }).then(res => {
-          this.$router.push('/list')
-        });
+        if (!this.$route.query.create) {
+          this.$axios.post("http://localhost:3000/api/airticle", {
+            title: this.airticalTitle,
+            content: this.value,
+            id: this.id,
+          }).then(res => {
+            this.$message({
+              type: 'success',
+              message: '创建成功,3秒后返回列表',
+            })
+            setTimeout(() => {
+              this.$router.push('/list');
+            }, 3000);
+          });
+        } else {
+          this.$axios.post('http://localhost:3000/api/create_airticle', {
+            title: this.airticalTitle,
+            content: this.value,
+          }).then(res => {
+            this.$message({
+              type: 'success',
+              message: '更新成功,3秒后返回列表',
+            })
+            setTimeout(() => {
+              this.$router.push('/list');
+            }, 3000);
+          });
+        }
       }
     }
   };
