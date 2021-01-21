@@ -19,7 +19,7 @@
     "koa2-history-api-fallback": "^0.1.0",
     "mysql2": "^1.7.0",
     "sequelize": "^5.19.1",
-    "socket.io": "^2.2.0",
+    "socket.io": "^2.4.0",
     "ws": "^7.1.2"
   }
 }
